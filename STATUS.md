@@ -1,20 +1,21 @@
 # STATUS
 
-**Phase:** 2 — P0 RTL + lockstep. **End-to-end loopback gate MET**; host interface remains.
+**Phase:** 2 — P0 RTL + lockstep. **P0 COMPLETE** (full chip integrated); ready for Phase 3.
 **Branch:** `claude/upbeat-hypatia-eqKXz`
 **Last updated:** 2026-06-07
 
-## Phase 2 results (evidence)
-- RTL datapath complete + lockstep vs golden model: `make sim` **9/9**, `make model` **23/23**.
-  Modules: `bl_scrambler`, `bl_dbpsk`, `bl_spreader`, `bl_correlator`, `bl_crc16`, `bl_tx`,
-  `bl_rx`. End-to-end `tb_loopback`: full-packet TX→loopback→RX recovers PSDU, CRC OK
-  (len 1/4/9), cross-checked vs model.
-- Datapath synth ≈ **1200 generic cells** (TX+RX; budget ~4900 @ 70% of 7k) — headroom OK.
-- `make lint` clean (verilator -Wall + Verible). **CI green** on `8d6c003`: lint ✓ test ✓
-  formal ✓. (First Phase 2 lint run flagged 3 Verible SV-style rules → waived, D-0108.)
-- **Remaining P0 (before Phase 3):** SPI→APB3 CSR (PeakRDL regblock), TX/RX FIFOs, IRQ,
-  loopback mux, and wiring `bl_tx`/`bl_rx` into `tt_um_barkerlink` (top is still the
-  Phase 0 passthrough stub).
+## Phase 2 / P0 results (evidence)
+- Full P0 chip integrated and verified: `make sim` **13/13**, `make model` **23/23**,
+  `make lint` clean (verilator -Wall + Verible in CI).
+- Datapath modules (lockstep vs golden model): `bl_scrambler`, `bl_dbpsk`, `bl_spreader`,
+  `bl_correlator`, `bl_crc16`, `bl_tx`, `bl_rx`; infra: `bl_fifo`, `bl_csr` (APB3),
+  `bl_spi_apb` (SPI mode-0, oversampled D-0110).
+- Integration: `barkerlink_core` (CSR + TX/RX FIFOs + DSSS + loopback mux + IRQ) wired
+  into `tt_um_barkerlink` per SPEC §3.2 pin map.
+- End-to-end: `test_core` (APB-driven) and `test_top` (**pin-level SPI**) push a PSDU,
+  TX→internal loopback→RX, recover it with CRC OK, read back over SPI. Cross-checked vs model.
+- Full-chip synth ≈ **2743 generic cells** (budget ~4900 @ 70% of 7k) — headroom OK.
+- **P1 stubs (not yet built):** CCA/RSSI, LFSR noise injector, DQPSK datapath, scan.
 
 ## Phase 1 results (evidence)
 - **Golden model:** `make model` → **23/23 passing** (`model/test_model.py`).
@@ -39,9 +40,9 @@
 - Make targets: `model`, `ber`, `regs`. DECISIONS D-0101..D-0106.
 
 ## Open gate
-**Phase 2 datapath gate MET** — end-to-end TX→loopback→RX passing + lint clean.
-Remaining to fully close P0 before Phase 3: host interface (SPI→APB3 CSR, TX/RX FIFOs,
-IRQ, loopback mux) + wire `bl_tx`/`bl_rx` into `tt_um_barkerlink`.
+**P0 complete** — full chip (SPI→APB3 CSR + FIFOs + DSSS TX/RX + loopback + IRQ) passes
+pin-level SPI loopback; lint clean; 2743 cells. **Next: Phase 3** — constrained-random
+≥500 seeds, functional coverage ≥95%, regression report committed.
 
 ## Phase 2 plan (module-by-module: RTL → cocotb lockstep vs golden model → lint → commit)
 scrambler → DBPSK enc/dec → Barker spreader/oversample → soft correlator + genie decision

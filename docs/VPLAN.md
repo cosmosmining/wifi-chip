@@ -38,12 +38,13 @@ Status: `passing` / `wip` / `planned`.
 - **Phase 5 (P1):** re-meet closure on expanded design; RTL BER-vs-injection within the
   ±1 dB-equivalent band of the golden model (`docs/img/ber_dbpsk.png`).
 
-## Phase 2 status (RTL lockstep)
-Model layer **23/23** (`make model`). RTL lockstep benches **passing 9/9** (`make sim`):
-`test_scrambler` (V-TX-SCRAM, both dirs), `test_dbpsk` (V-TX-DBPSK), `test_spreader`
-(V-TX-BARKER), `test_correlator` (V-RX-CORR, clean + noisy), `test_crc` (V-PLCP-HDR),
-and the end-to-end `test_loopback` (V-LOOP / V-RX-DEMOD / V-PLCP-SFD): full-packet
-TX→loopback→RX recovers the PSDU with CRC OK, cross-checked vs the golden model.
-Datapath synth ≈ 1200 generic cells (TX+RX). **Remaining P0:** host interface
-(SPI→APB3 CSR via PeakRDL regblock, TX/RX FIFOs, IRQ, loopback mux) + `tt_um_barkerlink`
-wiring (V-CSR, V-FIFO), then Phase 3 constrained-random closure.
+## Phase 2 / P0 status — COMPLETE
+Model **23/23** (`make model`); RTL benches **13/13** (`make sim`):
+`test_scrambler` (V-TX-SCRAM), `test_dbpsk` (V-TX-DBPSK), `test_spreader` (V-TX-BARKER),
+`test_correlator` (V-RX-CORR), `test_crc` (V-PLCP-HDR), `test_fifo` (V-FIFO), `test_csr`
+(V-CSR), `test_loopback` + `test_core` + `test_top` (V-LOOP / V-RX-DEMOD / V-PLCP-SFD):
+PSDU recovered end-to-end (datapath, APB, and pin-level SPI) with CRC OK, cross-checked vs
+the golden model. Full-chip synth ≈ 2743 generic cells.
+**Next (Phase 3):** constrained-random ≥500 seeds, functional coverage ≥95% (length × data
+× FIFO occupancy × SFD-false-detect crosses), regression report committed. P1 benches
+(V-DQPSK/V-NOISE/V-CCA) and V-DFT follow in Phases 5/6.
