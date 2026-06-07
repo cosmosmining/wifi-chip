@@ -1,0 +1,11 @@
+# BarkerLink Verible lint waivers (project house style) - see DECISIONS D-0108.
+# RTL is portable Verilog-2001 (iverilog/verilator/yosys), not Google-SV style.
+# These three default rules conflict with that house style and are disabled
+# project-wide; all other Verible rules remain enforced (zero-warning gate).
+#
+# UPPER_SNAKE_CASE constants/state names are the universal Verilog convention.
+-parameter-name-style
+# Untyped localparam/parameter (with explicit width) is standard Verilog-2001.
+-explicit-parameter-storage-type
+# `always @*` is valid Verilog-2001 combinational style (we keep .v, not .sv).
+-always-comb

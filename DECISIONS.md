@@ -90,3 +90,17 @@ item; it is presented at the Phase 1 freeze gate.
 Operator approved the Phase 1 gate: "Freeze & start Phase 2." SPEC.md Rev 1.0 is frozen
 including the §3.2 pin map. Phase 2 (P0 RTL + lockstep) begins. Any spec change now needs
 a new dated revision + a DECISIONS entry (quality gate: spec is law for RTL).
+
+---
+
+## Phase 2 — P0 RTL + lockstep
+
+### D-0108 — Verible house-style waivers; RTL is Verilog-2001 (2026-06-07)
+BarkerLink RTL targets portable **Verilog-2001** (clean across iverilog/verilator/yosys),
+not Google-SystemVerilog style. Three Verible default rules conflict with that and are
+waived project-wide via `dv/lint/verible.rules` (`make lint` passes `--rules_config`):
+`parameter-name-style` (we use universal UPPER_SNAKE_CASE constants/states),
+`explicit-parameter-storage-type` (untyped localparams with explicit width are standard
+V2001), and `always-comb` (we use `always @*`). All other Verible rules stay enforced
+(zero-warning gate). verilator `-Wall` remains the always-on local gate. Caught by the
+first CI run of the Phase 2 RTL (lint workflow); functional `test` workflow was green.

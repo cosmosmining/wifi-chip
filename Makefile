@@ -46,7 +46,8 @@ lint: ## RTL lint, zero-warning gate (verilator; verible if present)
 	if grep -qE '%(Warning|Error)' $(BUILD)/lint.log; then \
 	  echo "LINT FAIL: warnings/errors above are not waived"; exit 1; fi
 	if [ -n "$(VERIBLE)" ]; then \
-	  echo ">> verible-verilog-lint"; $(VERIBLE) $(RTL); \
+	  echo ">> verible-verilog-lint"; \
+	  $(VERIBLE) --rules_config=dv/lint/verible.rules $(RTL); \
 	else echo ">> verible not installed locally (enforced in CI)"; fi
 	echo "LINT CLEAN"
 
