@@ -10,7 +10,8 @@
   `bl_rx`. End-to-end `tb_loopback`: full-packet TX→loopback→RX recovers PSDU, CRC OK
   (len 1/4/9), cross-checked vs model.
 - Datapath synth ≈ **1200 generic cells** (TX+RX; budget ~4900 @ 70% of 7k) — headroom OK.
-- `make lint` clean (verilator -Wall) on all modules.
+- `make lint` clean (verilator -Wall + Verible). **CI green** on `8d6c003`: lint ✓ test ✓
+  formal ✓. (First Phase 2 lint run flagged 3 Verible SV-style rules → waived, D-0108.)
 - **Remaining P0 (before Phase 3):** SPI→APB3 CSR (PeakRDL regblock), TX/RX FIFOs, IRQ,
   loopback mux, and wiring `bl_tx`/`bl_rx` into `tt_um_barkerlink` (top is still the
   Phase 0 passthrough stub).
