@@ -12,6 +12,8 @@
   `regblock` (APB3 SV), `c-header`, and `html` all generate cleanly (`make regs`).
 - **Scrambler:** unit test caught seed 0x7F lock-up on all-ones SYNC → seed 0x6C (D-0102).
 - `make smoke` still green (Phase 0 gate intact); RTL unchanged.
+- **CI green** on `92ee342`: `lint` ✓, `test` ✓ (smoke + sim + **model** + synth), `formal` ✓
+  (oss-cad-suite path validated; still a Phase 4 stub).
 
 ## What exists (added in Phase 1)
 - `model/barkerlink_model.py` — fixed-point golden model (scrambler / DBPSK / Barker /
