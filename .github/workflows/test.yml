@@ -1,0 +1,35 @@
+name: test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install sim toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog verilator yosys
+          python -m pip install --upgrade pip
+          pip install cocotb pytest
+      - name: Toolchain report
+        run: make tools
+      - name: make smoke (Phase 0 gate)
+        run: make smoke
+      - name: make sim (full cocotb suite)
+        run: make sim
+      - name: make synth (synthesizability)
+        run: make synth
+      - name: Upload sim build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-logs
+          path: build/
+          if-no-files-found: ignore

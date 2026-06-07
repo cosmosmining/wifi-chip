@@ -1,0 +1,25 @@
+name: formal
+# Runs SymbiYosys safety proofs (Phase 4). Triggered on RTL/formal changes and on
+# demand so doc-only pushes do not pay for the oss-cad-suite install.
+on:
+  push:
+    paths:
+      - "rtl/**"
+      - "dv/formal/**"
+      - "Makefile"
+      - ".github/workflows/formal.yml"
+  pull_request:
+    paths:
+      - "rtl/**"
+      - "dv/formal/**"
+  workflow_dispatch:
+
+jobs:
+  formal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install oss-cad-suite (yosys + sby)
+        uses: YosysHQ/setup-oss-cad-suite@v3
+      - name: make formal
+        run: make formal

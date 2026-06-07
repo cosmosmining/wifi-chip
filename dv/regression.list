@@ -1,0 +1,3 @@
+# BarkerLink regression manifest — bench modules run by `make regress`.
+# One pytest target per line; comments with '#'. Expanded as benches land.
+dv/cocotb/test_smoke.py

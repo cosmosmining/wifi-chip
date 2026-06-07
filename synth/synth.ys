@@ -1,0 +1,11 @@
+# BarkerLink - generic synthesizability + cell-count check (Yosys).
+# No PDK liberty required: this proves the RTL elaborates and synthesizes to a
+# gate netlist and gives a technology-independent cell count for trend tracking.
+# Real sky130 cell mapping / area closure happens in Phase 7 (LibreLane/ORFS).
+read_verilog rtl/core/barkerlink_core.v
+read_verilog rtl/tt_top/tt_um_barkerlink.v
+hierarchy -check -top tt_um_barkerlink
+proc
+opt
+synth -top tt_um_barkerlink -flatten
+stat

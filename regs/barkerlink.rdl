@@ -1,0 +1,28 @@
+// BarkerLink CSR map — SINGLE SOURCE OF TRUTH.
+// PeakRDL generates the APB3 CSR RTL, C/Python headers, and the register-map docs
+// from this file. Phase 0 stub: a minimal valid addrmap (ID + CTRL). Phase 1 expands
+// it to the full map (STATUS, IRQ_EN/STATUS, TX/RX FIFO data + level, MODE, NOISE_PROB,
+// CCA_THRESH, RSSI, TEST_EN). See docs/SPEC.md §5.
+
+addrmap barkerlink {
+    name = "BarkerLink DSSS baseband CSRs";
+    desc = "Phase 0 stub register map; expanded in Phase 1.";
+
+    default regwidth = 32;
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "ID";
+        desc = "IP identification / version (read-only).";
+        field { sw = r; hw = r; desc = "Magic 'BL'."; } MAGIC[31:16] = 0x424C;
+        field { sw = r; hw = r; desc = "Major version."; } VER_MAJ[15:8] = 0x00;
+        field { sw = r; hw = r; desc = "Minor version."; } VER_MIN[7:0]  = 0x01;
+    } ID @ 0x00;
+
+    reg {
+        name = "CTRL";
+        desc = "Global control (placeholder; expanded in Phase 1).";
+        field { sw = rw; hw = r; desc = "Core enable."; } EN[0:0] = 0;
+    } CTRL @ 0x04;
+};

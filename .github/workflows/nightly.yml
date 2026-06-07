@@ -1,0 +1,35 @@
+name: nightly
+on:
+  schedule:
+    - cron: "0 6 * * *"   # 06:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog verilator yosys
+          python -m pip install --upgrade pip
+          pip install cocotb pytest
+      - name: Full sim
+        run: make sim
+      - name: Synthesizability
+        run: make synth
+      - name: Regression (Phase 3+)
+        run: make regress
+      - name: Metrics row
+        run: make metrics
+      - name: Upload summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-summary
+          path: build/summary.json
+          if-no-files-found: ignore

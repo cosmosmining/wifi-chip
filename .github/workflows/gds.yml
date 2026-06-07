@@ -1,0 +1,26 @@
+name: gds
+# Tiny Tapeout RTL->GDS signoff. Manual/tag-only until Phase 7 so CI minutes are not
+# spent hardening an incomplete design (see DECISIONS.md D-0006). In Phase 7 the job
+# body below is replaced by a call to the official TT reusable workflow, pinned to the
+# TTSKY26c ref, e.g.:
+#
+#   jobs:
+#     gds:
+#       uses: TinyTapeout/tt-gds-action/.github/workflows/gds.yml@<ttsky26c-ref>
+#
+# and the precheck/viewer jobs are added per the TT template.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  gds-placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Phase 7 notice
+        run: |
+          echo "TT GDS hardening is wired up in Phase 7 (see DECISIONS.md D-0006)."
+          echo "info.yaml top_module: $(grep -E 'top_module' info.yaml || true)"

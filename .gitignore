@@ -1,0 +1,18 @@
+# build + sim artifacts
+build/
+sim_build/
+**/sim_build/
+results.xml
+*.result.xml
+*.vcd
+*.fst
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# editor / OS
+*.swp
+.DS_Store

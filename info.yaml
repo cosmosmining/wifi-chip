@@ -1,0 +1,22 @@
+# Tiny Tapeout project information.
+# The top module and target are authoritative now; the pin map is finalized at the
+# Phase 1 SPEC freeze (docs/SPEC.md §3.2) and final TT source packaging (canonical src/
+# layout) + full GDS signoff happen in Phase 7 (see DECISIONS.md D-0006).
+project:
+  title:        "BarkerLink"
+  author:       "cosmosmining"
+  discord:      ""
+  description:  "802.11b-class DSSS baseband transceiver (TX/RX) digital IP"
+  language:     "Verilog"
+  clock_hz:     50000000
+  tiles:        "2x2"
+  top_module:   "tt_um_barkerlink"
+  source_files:
+    - "rtl/core/barkerlink_core.v"
+    - "rtl/tt_top/tt_um_barkerlink.v"
+
+# Pin assignments are placeholders until the SPEC freeze (Phase 1).
+pinout:
+  ui:  ["", "", "", "", "", "", "", ""]
+  uo:  ["", "", "", "", "", "", "", ""]
+  uio: ["", "", "", "", "", "", "", ""]

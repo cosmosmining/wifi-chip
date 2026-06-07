@@ -1,0 +1,28 @@
+name: lint
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install verilator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator
+      - name: Install Verible
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/verible
+          gh release download --repo chipsalliance/verible \
+            --pattern '*linux-static-x86_64.tar.gz' --dir /tmp/verible
+          tar -xzf /tmp/verible/*.tar.gz -C /tmp/verible --strip-components=1
+          echo "/tmp/verible/bin" >> "$GITHUB_PATH"
+      - name: Verible version
+        run: verible-verilog-lint --version | head -2
+      - name: make lint (zero-warning gate, verilator + verible)
+        run: make lint
