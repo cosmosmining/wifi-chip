@@ -18,6 +18,7 @@ module bl_csr (
     input  wire [31:0] pwdata,
     output reg  [31:0] prdata,
     output wire        pready,
+    output wire        irq,             // level: any enabled IRQ pending
     // control outputs (reg -> core)
     output reg         ctrl_en,
     output reg         ctrl_rx_en,
@@ -26,7 +27,6 @@ module bl_csr (
     output reg         ctrl_noise_en,
     output reg         tx_start,        // 1-cycle pulse
     output reg         soft_rst,        // 1-cycle pulse
-    output reg  [5:0]  irq_en,
     output reg  [7:0]  cfg_signal,
     output reg  [7:0]  cfg_service,
     output reg  [15:0] cfg_length,
@@ -62,7 +62,10 @@ module bl_csr (
   wire [5:0] widx = paddr[7:2];
 
   reg [5:0] irq_status;
+  reg [5:0] irq_en;
   wire [5:0] irq_clr = (wr && widx == 6'd4) ? pwdata[5:0] : 6'd0;
+  assign irq = |(irq_status & irq_en);
+  wire _unused_csr = &{1'b0, paddr[1:0]};   // word-aligned; byte offset unused
 
   always @(posedge clk) begin
     if (!rst_n) begin
