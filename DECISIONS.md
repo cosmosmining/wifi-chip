@@ -104,3 +104,17 @@ waived project-wide via `dv/lint/verible.rules` (`make lint` passes `--rules_con
 V2001), and `always-comb` (we use `always @*`). All other Verible rules stay enforced
 (zero-warning gate). verilator `-Wall` remains the always-on local gate. Caught by the
 first CI run of the Phase 2 RTL (lint workflow); functional `test` workflow was green.
+
+### D-0109 — CSR RTL hand-written in Verilog-2001; RDL stays the map source (2026-06-07)
+PeakRDL-regblock emits SystemVerilog with packages + packed-struct hwif ports, which would
+pull SV (and yosys `-sv`, struct flattening) into the otherwise clean V2001 open-flow. So
+`bl_csr.v` is hand-written V2001 implementing `regs/barkerlink.rdl`; the RDL remains the
+single source for the register **map** (documentation + C header via `make regs`), and the
+CSR RTL is held to it by `test_csr` (V-CSR). A future CI equivalence check vs the generated
+regblock can tighten this. Net: one map definition (RDL), portable RTL implementation.
+
+### D-0110 — SPI is oversampled in the clk domain (no 2nd clock) (2026-06-07)
+The SPI slave samples SCLK/CSn/MOSI through 2-FF synchronizers and detects SCLK edges in
+the 50 MHz `clk` domain (f_clk >> f_sclk), so there are no SCLK-clocked flops and the
+single-clock-domain rule holds. The synchronizers are the CDC structures for the async
+SPI inputs. (bl_spi_apb.)
