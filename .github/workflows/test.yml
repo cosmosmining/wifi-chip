@@ -24,6 +24,8 @@ jobs:
         run: make smoke
       - name: make sim (full cocotb suite)
         run: make sim
+      - name: make model (golden-model unit tests)
+        run: make model
       - name: make synth (synthesizability)
         run: make synth
       - name: Upload sim build logs
