@@ -46,3 +46,42 @@ removed when these pins gain real loads (test-enable CSR bit, SPI slave) in Phas
 every push, to avoid burning CI minutes hardening an incomplete design. The Phase 0
 `info.yaml` names the real top module and source files; final TT source packaging
 (canonical `src/` layout vs our `rtl/` tree) and full GDS signoff happen in Phase 7.
+
+---
+
+## Phase 1 — Spec, golden model, VPLAN
+
+### D-0101 — LENGTH field is PSDU octets, not microseconds (2026-06-07)
+802.11 encodes PLCP LENGTH in microseconds (decoded to octets via the rate). For a
+standalone digital baseband IP with a clean streaming interface, LENGTH is defined
+directly as **PSDU octet count** (16-bit). Documented deviation; simplifies RX PSDU
+slicing and the host contract. Model + RTL + `regs/barkerlink.rdl` all use octets.
+
+### D-0102 — Scrambler seed 0x6C (2026-06-07)
+The self-synchronizing scrambler (z⁻⁷+z⁻⁴+1) has a lock-up state at seed 0x7F: with all
+register bits 1, feedback `bit3^bit6 = 0`, so scrambling the all-ones SYNC field returns
+all ones (no scrambling). A model unit test (`test_scrambler_is_not_identity`) caught it.
+Seed set to **0x6C** (non-degenerate). RX descrambler is self-synchronizing, so it is
+seed-independent after 7 bits; the seed only matters for TX SYNC randomization.
+
+### D-0103 — CRC-16-CCITT, MSB-first, init 0xFFFF, final complement (2026-06-07)
+PLCP header CRC uses poly 0x1021, init 0xFFFF, bits processed MSB-first, result
+complemented. This is a documented, self-consistent contract between the golden model and
+RTL (golden model is law). Verified by round-trip + single-bit-flip detection tests.
+
+### D-0104 — DQPSK chip-flip BER modeled as two orthogonal BPSK dimensions (2026-06-07)
+The noise model is a chip-level BSC (flip probability), not AWGN, so there is no Eb/N0
+and thus no DBPSK↔DQPSK AWGN gap. DQPSK is modeled as I/Q BPSK dimensions, each with the
+11-chip processing gain; per-bit BER tracks DBPSK, the 2× throughput being the
+differentiator. Documented model; finalized in Phase 5 when the DQPSK datapath exists.
+
+### D-0105 — BER measured at the post-differential PHY point (2026-06-07)
+The theoretical curve `ber_dbpsk_bsc(p)` is the post-differential-decode bit error. The
+Monte-Carlo harness measures BER there (pre-descramble) to validate against theory. The
+self-sync descrambler multiplies a single bit error into 3 (taps at n, n+4, n+7); that
+system-level PSDU effect is reported separately and is not a model/theory discrepancy.
+
+### D-0106 — Pin map proposed, pending operator freeze (2026-06-07)
+SPEC §3.2 proposes the full functional/test-mode pin allocation (SPI, IRQ, TX/RX chip
+streams, CCA, scan on `uio`). Per the hard rules the pin map is an operator sign-off
+item; it is presented at the Phase 1 freeze gate.

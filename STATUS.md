@@ -1,38 +1,35 @@
 # STATUS
 
-**Phase:** 0 — Scaffold (complete; awaiting operator gate approval)
+**Phase:** 1 — Spec + golden model + VPLAN (complete; awaiting operator **SPEC freeze**)
 **Branch:** `claude/upbeat-hypatia-eqKXz`
 **Last updated:** 2026-06-07
 
 ## Last results (evidence)
-- `make smoke` → `LINT CLEAN` + 1 cocotb test passed + `SMOKE PASS` (local, rc=0).
-- **CI green** on push `0cc392a`: `test` workflow (smoke + sim + synth) ✓ and `lint`
-  workflow (verilator + **Verible**) ✓ — Verible is enforced and clean in CI.
-- `make synth` → 8 generic cells (registered `ui_in`→`uo_out` placeholder).
-- RTL: `verilator --lint-only -Wall` clean; `iverilog -g2012 -Wall` elaborates clean.
-- Toolchain installed locally: iverilog 12, verilator 5.020, yosys 0.33, cocotb 2.0.1,
-  pytest, yosys-smtbmc. Deferred to CI: verible, sby, OpenSTA/LibreLane/magic/klayout/netgen.
-- PostToolUse RTL hook verified: pass on good edit, silent-skip on non-RTL, exit 2 on
-  broken RTL.
+- **Golden model:** `make model` → **23/23 passing** (`model/test_model.py`).
+- **BER:** model Monte-Carlo tracks analytic theory within ~10% across p=0.10..0.32
+  (`model/ber_curve.csv`); curve plotted at `docs/img/ber_dbpsk.png`.
+- **Register map:** `regs/barkerlink.rdl` elaborates (14 regs, 0x00–0x37); PeakRDL
+  `regblock` (APB3 SV), `c-header`, and `html` all generate cleanly (`make regs`).
+- **Scrambler:** unit test caught seed 0x7F lock-up on all-ones SYNC → seed 0x6C (D-0102).
+- `make smoke` still green (Phase 0 gate intact); RTL unchanged.
 
-## What exists
-- Full repo tree per SPEC §3.
-- `tt_um_barkerlink` + `barkerlink_core` Phase 0 placeholders (registered passthrough;
-  validates clock / sync reset / hierarchy / pin wiring).
-- `Makefile`: `smoke`/`lint`/`sim`/`synth` live; `regress`/`cov`/`formal`/`dft`/
-  `harden`/`sweep`/`predict` honest phase-tagged stubs.
-- cocotb smoke bench (runner + pytest); `scripts/metrics.py`; `scripts/hook_rtl_check.sh`.
-- CI workflows: `lint`, `test`, `formal`, `gds` (manual until Phase 7), `nightly`.
-- Slash commands: `/regress /lockstep /timing /status`.
-- Doc skeletons: `SPEC.md`, `VPLAN.md`, `INTEGRATION.md`, `ERRATA.md`; `regs/barkerlink.rdl` stub.
-
-## Next actions — Phase 1 (after gate approval)
-1. Freeze the **pin map** and **register map** in `docs/SPEC.md` (datasheet-grade:
-   interfaces, timing diagrams, state machines, performance targets).
-2. Write the Python **fixed-point golden model** + unit tests; plot theoretical
-   DBPSK/DQPSK BER curves.
-3. Build the `VPLAN.md` feature→test→coverage skeleton.
-4. **Gate:** operator freezes `SPEC.md` before any P0 RTL.
+## What exists (added in Phase 1)
+- `model/barkerlink_model.py` — fixed-point golden model (scrambler / DBPSK / Barker /
+  genie correlator / PLCP / CRC-16 / loopback / chip-flip noise; DQPSK symbol mapping).
+- `model/ber_theory.py` + curve PNG/CSV; `model/test_model.py` (23 tests).
+- `regs/barkerlink.rdl` — full APB3 register map (ID..TEST), single source.
+- `docs/SPEC.md` — datasheet-grade **freeze candidate** (interfaces, **pin map**, register
+  map, TX/RX datapath + fixed-point, PLCP, FSMs, timing, performance targets).
+- `docs/VPLAN.md` — feature→test→coverage map (model layer passing; RTL benches mapped).
+- `docs/INTEGRATION.md` — SPI/APB3 protocol + register flows.
+- Make targets: `model`, `ber`, `regs`. DECISIONS D-0101..D-0106.
 
 ## Open gate
-**Phase 0 → awaiting operator "continue" to begin Phase 1.**
+**Phase 1 → awaiting operator SPEC freeze.** The one sign-off item is the **pin map**
+(SPEC §3.2). On "freeze + continue" I begin Phase 2.
+
+## Next actions — Phase 2 (P0 RTL + lockstep), after freeze
+Module-by-module (model test → RTL → cocotb lockstep vs golden model → lint → commit):
+scrambler → DBPSK → Barker spreader → correlator → diff-demod/descramble → PLCP FSM →
+CRC → APB3 CSR (PeakRDL regblock) + SPI bridge + FIFOs + IRQ → end-to-end
+TX→loopback→RX. Gate: full-packet loopback passes; lint clean.

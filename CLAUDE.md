@@ -21,6 +21,9 @@ target 50 MHz; chip-rate logic designed for 44 MHz (4× oversample of 11 Mchip/s
 | Smoke (Phase 0 gate) | `make smoke` | lint + cocotb/Icarus hello sim |
 | Lint (zero-warning) | `make lint` | verilator `-Wall`; verible in CI |
 | Full sim | `make sim` | pytest over `dv/cocotb` |
+| Golden model | `make model` | pytest over `model/` (golden model unit tests) |
+| BER curve | `make ber` | regenerate `docs/img/ber_dbpsk.png` + `model/ber_curve.csv` |
+| Register map | `make regs` | PeakRDL validate + gen CSR block / C header / HTML |
 | Synthesizability | `make synth` | yosys elaborate + generic cell count |
 | Regression | `make regress` | Phase 3 |
 | Coverage | `make cov` | Phase 3 |
@@ -45,7 +48,9 @@ target 50 MHz; chip-rate logic designed for 44 MHz (4× oversample of 11 Mchip/s
 
 ## Toolchain (this environment)
 Installed locally: **iverilog 12, verilator 5.020, yosys 0.33, cocotb 2.0.1, pytest,
-yosys-smtbmc**. Deferred to CI (sandbox blocks GitHub releases / some apt PPAs):
+yosys-smtbmc**; Phase 1 added **numpy, matplotlib, peakrdl** (note: numpy must live in
+`/usr/local` via `pip install --ignore-installed` — a stale Debian numpy shadows it).
+Deferred to CI (sandbox blocks GitHub releases / some apt PPAs):
 **verible, sby (SymbiYosys), OpenSTA, OpenROAD/LibreLane, magic, klayout, netgen**.
 See `DECISIONS.md` (D-0002). CI installs these via apt + oss-cad-suite + the TT action.
 
@@ -56,6 +61,12 @@ See `DECISIONS.md` (D-0002). CI installs these via apt + oss-cad-suite + the TT 
 - Build with `timescale=("1ns","1ps")`.
 - Sample **registered** outputs one delta after the edge (`await Timer(1, unit="ns")`).
 - Shared paths/constants: `dv/cocotb/bl_paths.py`.
+
+## Golden model (law)
+- `model/barkerlink_model.py` is the bit-accurate reference; RTL is checked against it.
+  Fixed-point/framing conventions live in SPEC §6/§9 and the model constants. Never edit
+  the model to make RTL pass — the spec arbitrates (model change → spec cite + DECISIONS).
+- Run `make model` (23 tests). BER theory + model Monte-Carlo: `make ber`.
 
 ## File map
 - `rtl/core/` — bus-facing IP (`barkerlink_core`; APB3 CSRs + TX/RX from Phase 2)
