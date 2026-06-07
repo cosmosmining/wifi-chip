@@ -1,10 +1,21 @@
 # STATUS
 
-**Phase:** 2 — P0 RTL + lockstep (in progress). Phase 1 SPEC **frozen** Rev 1.0 (D-0107).
+**Phase:** 2 — P0 RTL + lockstep. **End-to-end loopback gate MET**; host interface remains.
 **Branch:** `claude/upbeat-hypatia-eqKXz`
 **Last updated:** 2026-06-07
 
-## Last results (evidence)
+## Phase 2 results (evidence)
+- RTL datapath complete + lockstep vs golden model: `make sim` **9/9**, `make model` **23/23**.
+  Modules: `bl_scrambler`, `bl_dbpsk`, `bl_spreader`, `bl_correlator`, `bl_crc16`, `bl_tx`,
+  `bl_rx`. End-to-end `tb_loopback`: full-packet TX→loopback→RX recovers PSDU, CRC OK
+  (len 1/4/9), cross-checked vs model.
+- Datapath synth ≈ **1200 generic cells** (TX+RX; budget ~4900 @ 70% of 7k) — headroom OK.
+- `make lint` clean (verilator -Wall) on all modules.
+- **Remaining P0 (before Phase 3):** SPI→APB3 CSR (PeakRDL regblock), TX/RX FIFOs, IRQ,
+  loopback mux, and wiring `bl_tx`/`bl_rx` into `tt_um_barkerlink` (top is still the
+  Phase 0 passthrough stub).
+
+## Phase 1 results (evidence)
 - **Golden model:** `make model` → **23/23 passing** (`model/test_model.py`).
 - **BER:** model Monte-Carlo tracks analytic theory within ~10% across p=0.10..0.32
   (`model/ber_curve.csv`); curve plotted at `docs/img/ber_dbpsk.png`.
@@ -27,7 +38,9 @@
 - Make targets: `model`, `ber`, `regs`. DECISIONS D-0101..D-0106.
 
 ## Open gate
-**Phase 2 → full-packet TX→loopback→RX passing + lint clean.** SPEC Rev 1.0 frozen (D-0107).
+**Phase 2 datapath gate MET** — end-to-end TX→loopback→RX passing + lint clean.
+Remaining to fully close P0 before Phase 3: host interface (SPI→APB3 CSR, TX/RX FIFOs,
+IRQ, loopback mux) + wire `bl_tx`/`bl_rx` into `tt_um_barkerlink`.
 
 ## Phase 2 plan (module-by-module: RTL → cocotb lockstep vs golden model → lint → commit)
 scrambler → DBPSK enc/dec → Barker spreader/oversample → soft correlator + genie decision

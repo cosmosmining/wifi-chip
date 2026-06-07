@@ -38,6 +38,12 @@ Status: `passing` / `wip` / `planned`.
 - **Phase 5 (P1):** re-meet closure on expanded design; RTL BER-vs-injection within the
   ±1 dB-equivalent band of the golden model (`docs/img/ber_dbpsk.png`).
 
-## Phase 1 status
-Model layer **passing: 23/23** (`make model`). BER model tracks theory within ~10%
-(`model/ber_curve.csv`). RTL benches land in Phase 2 alongside each module.
+## Phase 2 status (RTL lockstep)
+Model layer **23/23** (`make model`). RTL lockstep benches **passing 9/9** (`make sim`):
+`test_scrambler` (V-TX-SCRAM, both dirs), `test_dbpsk` (V-TX-DBPSK), `test_spreader`
+(V-TX-BARKER), `test_correlator` (V-RX-CORR, clean + noisy), `test_crc` (V-PLCP-HDR),
+and the end-to-end `test_loopback` (V-LOOP / V-RX-DEMOD / V-PLCP-SFD): full-packet
+TX→loopback→RX recovers the PSDU with CRC OK, cross-checked vs the golden model.
+Datapath synth ≈ 1200 generic cells (TX+RX). **Remaining P0:** host interface
+(SPI→APB3 CSR via PeakRDL regblock, TX/RX FIFOs, IRQ, loopback mux) + `tt_um_barkerlink`
+wiring (V-CSR, V-FIFO), then Phase 3 constrained-random closure.
