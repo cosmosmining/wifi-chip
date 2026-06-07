@@ -16,7 +16,7 @@ module bl_spreader (
     output reg  out_valid,
     output reg  out_chip      // 1-bit oversampled chip sign
 );
-  localparam integer TOT = 44;            // 11 chips * 4 oversample
+  localparam [5:0] TOT = 6'd44;           // 11 chips * 4 oversample
   localparam [10:0] BARKSB = 11'b11100010010;  // index i = sign bit of chip i
 
   reg        busy;
@@ -38,7 +38,7 @@ module bl_spreader (
     end else begin
       out_valid <= 1'b1;
       out_chip  <= sym ^ BARKSB[chip_idx];
-      if (cnt == TOT - 1) begin
+      if (cnt == TOT - 6'd1) begin
         busy <= 1'b0; cnt <= 6'd0;
       end else begin
         cnt <= cnt + 6'd1;

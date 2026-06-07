@@ -19,7 +19,6 @@ module bl_correlator (
     output reg  signed [7:0]  out_corr     // signed correlation peak
 );
   localparam [10:0] BARKSB = 11'b11100010010;
-  localparam integer NCH = 11, OS = 4;
 
   reg  [1:0]       phase;       // 0..3 oversample phase
   reg  [3:0]       chip_cnt;    // 0..10
@@ -37,7 +36,7 @@ module bl_correlator (
       out_valid <= 1'b0;
       if (in_valid) begin
         if (phase == 2'd0) begin
-          if (chip_cnt == NCH - 1) begin
+          if (chip_cnt == 4'd10) begin   // 11th sampled chip
             out_corr  <= sum;
             out_sym   <= sum[7];        // sign bit: 1 if negative
             out_valid <= 1'b1;
@@ -48,7 +47,7 @@ module bl_correlator (
             chip_cnt <= chip_cnt + 4'd1;
           end
         end
-        phase <= (phase == OS - 1) ? 2'd0 : phase + 2'd1;
+        phase <= (phase == 2'd3) ? 2'd0 : phase + 2'd1;   // 4x oversample
       end
     end
   end
