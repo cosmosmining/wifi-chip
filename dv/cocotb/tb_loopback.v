@@ -1,7 +1,6 @@
 `default_nettype none
-// DV-only wrapper: wires bl_tx's chip stream straight into bl_rx (internal loopback)
-// for the Phase 2 end-to-end gate. The product loopback path (CTRL.LOOPBACK mux) lands
-// with the host integration; this exercises the full TX+RX datapath concurrently.
+// DV-only wrapper: TX FIFO -> bl_tx -> (loopback chips) -> bl_rx, for the end-to-end
+// datapath gate. The product loopback path (CTRL.LOOPBACK mux) lives in barkerlink_core.
 module tb_loopback (
     input  wire        clk,
     input  wire        rst_n,
@@ -9,8 +8,9 @@ module tb_loopback (
     input  wire [7:0]  signal,
     input  wire [7:0]  service,
     input  wire [15:0] length,
-    input  wire [7:0]  psdu_data,
-    output wire [15:0] psdu_addr,
+    input  wire        tx_wr,        // push a PSDU byte into the TX FIFO
+    input  wire [7:0]  tx_wr_data,
+    output wire        tx_full,
     output wire        tx_busy,
     output wire        tx_done,
     output wire        sfd,
@@ -22,12 +22,19 @@ module tb_loopback (
     output wire [7:0]  byte_data,
     output wire        rx_done
 );
-  wire chip_valid, chip_out;
+  wire        chip_valid, chip_out;
+  wire [7:0]  fifo_head;
+  wire        tx_pop;
+
+  bl_fifo #(.WIDTH(8), .DEPTH(16)) u_txfifo (
+      .clk(clk), .rst_n(rst_n), .clear(1'b0),
+      .wr_en(tx_wr), .wr_data(tx_wr_data),
+      .rd_en(tx_pop), .rd_data(fifo_head), .full(tx_full));
 
   bl_tx u_tx (
       .clk(clk), .rst_n(rst_n), .start(start),
       .signal(signal), .service(service), .length(length),
-      .psdu_data(psdu_data), .psdu_addr(psdu_addr),
+      .psdu_data(fifo_head), .psdu_pop(tx_pop),
       .busy(tx_busy), .done(tx_done),
       .chip_valid(chip_valid), .chip_out(chip_out));
 

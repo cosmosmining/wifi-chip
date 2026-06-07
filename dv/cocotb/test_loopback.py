@@ -15,25 +15,24 @@ import barkerlink_model as bl
 CLK = bl_paths.CLK_PERIOD_NS
 
 
-async def _feed_psdu(dut, psdu):
-    """Combinational-ish PSDU byte source indexed by psdu_addr."""
-    while True:
-        a = int(dut.psdu_addr.value)
-        dut.psdu_data.value = psdu[a] if a < len(psdu) else 0
-        await ClockCycles(dut.clk, 1)
-
-
 async def _run_one(dut, psdu, signal=bl.SIGNAL_DBPSK_1M):
     dut.start.value = 0
+    dut.tx_wr.value = 0
+    dut.tx_wr_data.value = 0
     dut.signal.value = signal
     dut.service.value = bl.SERVICE_DEFAULT
     dut.length.value = len(psdu)
-    dut.psdu_data.value = 0
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 4)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 2)
-    cocotb.start_soon(_feed_psdu(dut, psdu))
+
+    # Push the whole PSDU into the TX FIFO (length <= 16 here).
+    for b in psdu:
+        dut.tx_wr.value = 1
+        dut.tx_wr_data.value = b
+        await ClockCycles(dut.clk, 1)
+    dut.tx_wr.value = 0
 
     dut.start.value = 1
     await ClockCycles(dut.clk, 1)

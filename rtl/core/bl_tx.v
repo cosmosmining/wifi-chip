@@ -7,8 +7,8 @@
 // One logical bit is injected at a time and the FSM waits for its 44-chip symbol to
 // finish spreading (saw_busy/ready handshake) before injecting the next, so the
 // single-pulse valid ripples through the pipeline in order. Header CRC-16 is computed
-// inline over SIGNAL|SERVICE|LENGTH. PSDU bytes are read by index (psdu_addr); the
-// FIFO pop interface is added at host integration. Bit order/seed per SPEC sec 6/7/9.
+// inline over SIGNAL|SERVICE|LENGTH. PSDU bytes are pulled from a FIFO (psdu_data = head,
+// psdu_pop advances to the next byte). Bit order/seed per SPEC sec 6/7/9.
 //============================================================================
 module bl_tx (
     input  wire        clk,
@@ -17,8 +17,8 @@ module bl_tx (
     input  wire [7:0]  signal,
     input  wire [7:0]  service,
     input  wire [15:0] length,         // PSDU octets
-    input  wire [7:0]  psdu_data,      // byte at psdu_addr (combinational source)
-    output reg  [15:0] psdu_addr,
+    input  wire [7:0]  psdu_data,      // current TX FIFO head byte
+    output reg         psdu_pop,       // 1-cycle pulse: advance FIFO to next byte
     output reg         busy,
     output reg         done,           // 1-cycle pulse at end of frame
     output wire        chip_valid,
@@ -31,6 +31,7 @@ module bl_tx (
   reg  [2:0]  field;
   reg  [7:0]  cnt;         // bit index within SYNC/SFD/HDR/CRC
   reg  [2:0]  bit_in_byte;
+  reg  [15:0] pbyte;       // PSDU byte index
   reg         inj_busy, saw_busy;
 
   // --- pipeline submodule wires ---
@@ -58,16 +59,17 @@ module bl_tx (
 
   always @(posedge clk) begin
     if (!rst_n) begin
-      field<=F_IDLE; cnt<=8'd0; bit_in_byte<=3'd0; inj_busy<=1'b0; saw_busy<=1'b0;
-      busy<=1'b0; done<=1'b0; psdu_addr<=16'd0; sc_iv<=1'b0; sc_ib<=1'b0; crc_iv<=1'b0;
+      field<=F_IDLE; cnt<=8'd0; bit_in_byte<=3'd0; pbyte<=16'd0;
+      inj_busy<=1'b0; saw_busy<=1'b0; busy<=1'b0; done<=1'b0; psdu_pop<=1'b0;
+      sc_iv<=1'b0; sc_ib<=1'b0; crc_iv<=1'b0;
     end else begin
-      sc_iv<=1'b0; crc_iv<=1'b0; done<=1'b0;
+      sc_iv<=1'b0; crc_iv<=1'b0; done<=1'b0; psdu_pop<=1'b0;
       case (field)
         F_IDLE: begin
           busy<=1'b0;
           if (start) begin
             field<=F_SYNC; cnt<=8'd0; bit_in_byte<=3'd0;
-            psdu_addr<=16'd0; inj_busy<=1'b0; saw_busy<=1'b0; busy<=1'b1;
+            pbyte<=16'd0; inj_busy<=1'b0; saw_busy<=1'b0; busy<=1'b1;
           end
         end
         F_DONE: begin done<=1'b1; busy<=1'b0; field<=F_IDLE; end
@@ -89,12 +91,12 @@ module bl_tx (
                         else cnt<=cnt+8'd1;
                 F_CRC:  if (cnt==8'd15) begin
                           if (length==16'd0) field<=F_DONE;
-                          else begin field<=F_PSDU; bit_in_byte<=3'd0; psdu_addr<=16'd0; end
+                          else begin field<=F_PSDU; bit_in_byte<=3'd0; pbyte<=16'd0; end
                         end else cnt<=cnt+8'd1;
                 F_PSDU: if (bit_in_byte==3'd7) begin
-                          bit_in_byte<=3'd0;
-                          if (psdu_addr==length-16'd1) field<=F_DONE;
-                          else psdu_addr<=psdu_addr+16'd1;
+                          bit_in_byte<=3'd0; psdu_pop<=1'b1;
+                          if (pbyte==length-16'd1) field<=F_DONE;
+                          else pbyte<=pbyte+16'd1;
                         end else bit_in_byte<=bit_in_byte+3'd1;
                 default: ;
               endcase
