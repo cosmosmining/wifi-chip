@@ -22,8 +22,8 @@ SBY        := $(shell command -v sby 2>/dev/null)
 PYTHON     := python3
 PYTEST     := python3 -m pytest
 
-.PHONY: help tools lint sim smoke model ber regress cov formal synth dft harden \
-        sweep predict metrics clean
+.PHONY: help tools lint sim smoke model ber regs regress cov formal synth dft \
+        harden sweep predict metrics clean
 
 help: ## list targets
 	@echo "BarkerLink make targets:"
@@ -65,6 +65,15 @@ model: ## run the Python golden-model unit tests
 
 ber: ## (re)generate the theoretical BER curve (docs/img/ber_dbpsk.png + csv)
 	$(PYTHON) model/ber_theory.py
+
+regs: ## validate regs/barkerlink.rdl + regenerate CSR block / C header / HTML
+	@command -v peakrdl >/dev/null || { echo "peakrdl missing (pip install peakrdl)"; exit 0; }
+	mkdir -p build/regs
+	peakrdl dump     regs/barkerlink.rdl
+	peakrdl regblock regs/barkerlink.rdl -o build/regs/regblock --cpuif apb3
+	peakrdl c-header regs/barkerlink.rdl -o build/regs/barkerlink_regs.h
+	peakrdl html     regs/barkerlink.rdl -o build/regs/html
+	@echo "regs generated under build/regs/ (CSR block integrated in Phase 2)"
 
 synth: ## generic Yosys elaborate + cell-count (synthesizability check)
 	@test -n "$(YOSYS)" || { echo "yosys missing (CI provides it)"; exit 0; }
