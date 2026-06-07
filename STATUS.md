@@ -6,6 +6,8 @@
 
 ## Last results (evidence)
 - `make smoke` → `LINT CLEAN` + 1 cocotb test passed + `SMOKE PASS` (local, rc=0).
+- **CI green** on push `0cc392a`: `test` workflow (smoke + sim + synth) ✓ and `lint`
+  workflow (verilator + **Verible**) ✓ — Verible is enforced and clean in CI.
 - `make synth` → 8 generic cells (registered `ui_in`→`uo_out` placeholder).
 - RTL: `verilator --lint-only -Wall` clean; `iverilog -g2012 -Wall` elaborates clean.
 - Toolchain installed locally: iverilog 12, verilator 5.020, yosys 0.33, cocotb 2.0.1,
