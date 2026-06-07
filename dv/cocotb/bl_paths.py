@@ -10,6 +10,12 @@ from pathlib import Path
 COCOTB_DIR = Path(__file__).resolve().parent          # dv/cocotb
 REPO_ROOT = COCOTB_DIR.parents[1]                      # repo root
 RTL_DIR = REPO_ROOT / "rtl"
+MODEL_DIR = REPO_ROOT / "model"
+
+# Make the golden model importable from any bench (lockstep reference).
+import sys
+if str(MODEL_DIR) not in sys.path:
+    sys.path.insert(0, str(MODEL_DIR))
 
 # Dependencies first (core), then the TT top wrapper.
 RTL_CORE = sorted((RTL_DIR / "core").glob("*.v"))
