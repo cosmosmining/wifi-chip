@@ -53,8 +53,6 @@ module bl_tx (
     endcase
   end
 
-  wire active = (field==F_SYNC)||(field==F_SFD)||(field==F_HDR)||
-                (field==F_CRC)||(field==F_PSDU);
   wire bit_done = inj_busy && sp_ready && saw_busy;
 
   always @(posedge clk) begin
