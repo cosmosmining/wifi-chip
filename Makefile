@@ -22,8 +22,8 @@ SBY        := $(shell command -v sby 2>/dev/null)
 PYTHON     := python3
 PYTEST     := python3 -m pytest
 
-.PHONY: help tools lint sim smoke regress cov formal synth dft harden sweep \
-        predict metrics clean
+.PHONY: help tools lint sim smoke model ber regress cov formal synth dft harden \
+        sweep predict metrics clean
 
 help: ## list targets
 	@echo "BarkerLink make targets:"
@@ -59,6 +59,12 @@ smoke: lint ## lint + hello-world cocotb/Icarus sim (Phase 0 gate)
 sim: ## run the full cocotb bench suite
 	@test -n "$(IVERILOG)" || { echo "iverilog missing - cannot sim"; exit 1; }
 	$(PYTEST) -q dv/cocotb
+
+model: ## run the Python golden-model unit tests
+	$(PYTEST) -q model
+
+ber: ## (re)generate the theoretical BER curve (docs/img/ber_dbpsk.png + csv)
+	$(PYTHON) model/ber_theory.py
 
 synth: ## generic Yosys elaborate + cell-count (synthesizability check)
 	@test -n "$(YOSYS)" || { echo "yosys missing (CI provides it)"; exit 0; }
