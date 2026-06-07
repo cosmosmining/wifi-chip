@@ -15,6 +15,7 @@
 - End-to-end: `test_core` (APB-driven) and `test_top` (**pin-level SPI**) push a PSDU,
   TX→internal loopback→RX, recover it with CRC OK, read back over SPI. Cross-checked vs model.
 - Full-chip synth ≈ **2743 generic cells** (budget ~4900 @ 70% of 7k) — headroom OK.
+- **CI green** on `8f8a64c`: lint ✓ test ✓ formal ✓ (two Verible style nits fixed/waived).
 - **P1 stubs (not yet built):** CCA/RSSI, LFSR noise injector, DQPSK datapath, scan.
 
 ## Phase 1 results (evidence)
