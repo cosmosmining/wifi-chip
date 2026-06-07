@@ -1,7 +1,7 @@
-# BarkerLink — Specification (Rev 1.0, Phase 1 freeze candidate)
+# BarkerLink — Specification (Rev 1.0, FROZEN 2026-06-07)
 
-> **Status: FREEZE CANDIDATE.** P0 RTL begins only after the operator freezes this
-> document. The **pin map (§3.2)** is the operator sign-off item. The golden model
+> **Status: FROZEN (Rev 1.0).** Operator-approved at the Phase 1 gate, including the pin
+> map (§3.2). Changes now require a new dated revision + DECISIONS entry. The golden model
 > `model/barkerlink_model.py` is the bit-accurate authority for every datapath detail
 > below; where prose and model disagree, the model is law and this spec is corrected.
 

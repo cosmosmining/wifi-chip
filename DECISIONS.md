@@ -85,3 +85,8 @@ system-level PSDU effect is reported separately and is not a model/theory discre
 SPEC §3.2 proposes the full functional/test-mode pin allocation (SPI, IRQ, TX/RX chip
 streams, CCA, scan on `uio`). Per the hard rules the pin map is an operator sign-off
 item; it is presented at the Phase 1 freeze gate.
+
+### D-0107 — SPEC Rev 1.0 frozen; pin map approved (2026-06-07)
+Operator approved the Phase 1 gate: "Freeze & start Phase 2." SPEC.md Rev 1.0 is frozen
+including the §3.2 pin map. Phase 2 (P0 RTL + lockstep) begins. Any spec change now needs
+a new dated revision + a DECISIONS entry (quality gate: spec is law for RTL).

@@ -1,6 +1,6 @@
 # STATUS
 
-**Phase:** 1 — Spec + golden model + VPLAN (complete; awaiting operator **SPEC freeze**)
+**Phase:** 2 — P0 RTL + lockstep (in progress). Phase 1 SPEC **frozen** Rev 1.0 (D-0107).
 **Branch:** `claude/upbeat-hypatia-eqKXz`
 **Last updated:** 2026-06-07
 
@@ -27,11 +27,10 @@
 - Make targets: `model`, `ber`, `regs`. DECISIONS D-0101..D-0106.
 
 ## Open gate
-**Phase 1 → awaiting operator SPEC freeze.** The one sign-off item is the **pin map**
-(SPEC §3.2). On "freeze + continue" I begin Phase 2.
+**Phase 2 → full-packet TX→loopback→RX passing + lint clean.** SPEC Rev 1.0 frozen (D-0107).
 
-## Next actions — Phase 2 (P0 RTL + lockstep), after freeze
-Module-by-module (model test → RTL → cocotb lockstep vs golden model → lint → commit):
-scrambler → DBPSK → Barker spreader → correlator → diff-demod/descramble → PLCP FSM →
-CRC → APB3 CSR (PeakRDL regblock) + SPI bridge + FIFOs + IRQ → end-to-end
-TX→loopback→RX. Gate: full-packet loopback passes; lint clean.
+## Phase 2 plan (module-by-module: RTL → cocotb lockstep vs golden model → lint → commit)
+scrambler → DBPSK enc/dec → Barker spreader/oversample → soft correlator + genie decision
+→ descramble → CRC-16 → PLCP TX/RX FSMs → APB3 CSR (PeakRDL regblock) + SPI bridge +
+TX/RX FIFOs + IRQ → wire into `tt_um_barkerlink` → end-to-end loopback.
+Datapath modules share the sign-bit / fixed-point conventions in SPEC §6.
