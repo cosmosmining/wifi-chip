@@ -1,8 +1,16 @@
 # STATUS
 
-**Phase:** 3 — DV closure. **COMPLETE** (regression 0 fail, 100% functional coverage).
+**Phase:** 4 — Formal. **COMPLETE** (FIFO / scrambler / PLCP FSM proofs pass).
 **Branch:** `claude/upbeat-hypatia-eqKXz`
 **Last updated:** 2026-06-08
+
+## Phase 4 results (evidence)
+- `make formal` (yosys+smtbmc+z3; sby not installable, D-0113) → **ALL PROOFS PASSED**:
+  - `fifo_props` — level bounds, full/empty consistency, tracked-value FIFO-order integrity
+    (BMC depth 14, DEPTH=4 parametric).
+  - `scrambler_props` — descramble(scramble(x))==x (**k-induction, unbounded**).
+  - `plcp_props` — bl_rx FSM legal transitions + DONE→SEARCH no-hang (**k-induction, unbounded**).
+- Depth justifications in `dv/formal/README.md`. CI `formal.yml` runs the same flow.
 
 ## Phase 3 results (evidence)
 - **Regression:** `make regress` SEEDS=500 (+60 noisy-RX) → **0 failures** (8m34s). Clean
@@ -52,9 +60,10 @@
 - Make targets: `model`, `ber`, `regs`. DECISIONS D-0101..D-0106.
 
 ## Open gate
-**Phase 3 gate MET** — regression 0 failures over 500+ seeds, functional coverage 100%
-(≥95% gate), `docs/COVERAGE.md` committed. **Next: Phase 4** — formal (SymbiYosys): FIFO
-safety, PLCP FSM deadlock-freedom/legal transitions, scrambler/descrambler inverse.
+**Phase 4 gate MET** — FIFO/scrambler/PLCP formal proofs pass; bounded depths justified.
+**Next: Phase 5** — P1 features (LFSR noise injector, CCA/RSSI, DQPSK, early-late timing),
+re-run DV closure. Per the area-fallback ladder, noise injector/CCA/scan are must-keep;
+DQPSK and early-late timing may be documented-but-untaped if area/schedule constrained.
 
 ## Phase 2 plan (module-by-module: RTL → cocotb lockstep vs golden model → lint → commit)
 scrambler → DBPSK enc/dec → Barker spreader/oversample → soft correlator + genie decision

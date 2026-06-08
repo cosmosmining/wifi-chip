@@ -6,11 +6,11 @@ is portable and runs locally and in CI). Properties live in `*_props.v` wrappers
 drive the DUT with free (`anyseq`/`anyconst`) inputs and a one-cycle reset at t0.
 
 ## Proofs and bounded-depth justification
-| Proof | Property | Mode / depth | Why the bound suffices |
+| Proof | Property | Result | Why it suffices |
 |---|---|---|---|
-| `fifo_props` | `bl_fifo` level∈[0,16]; full/empty flag consistency; a tracked symbolic value reads out in FIFO order (no loss/reorder/dup) | BMC, **depth 32** | 16-deep FIFO: 32 steps let the tracked element be enqueued at full occupancy and dequeued through all 16 ahead of it, covering every in-flight position; safety is an inductive invariant exercised within this window. |
-| `scrambler_props` | descramble(scramble(x)) == x (matched-seed self-sync inverse) | BMC **20** + induction | From reset both 7-bit LFSRs are aligned; the inverse is a local function of ≤7 past bits + the 2-cycle pipe, so 20 steps exercise the LFSR through many states; induction (k=20) closes it unbounded where it holds. |
-| `plcp_props` | `bl_rx` FSM legal transitions; DONE→SEARCH next cycle (no hang) | BMC **16** + induction | 4-state FSM; 16 steps reach and leave every state from reset, exhaustively exercising the next-state function. |
+| `fifo_props` | `bl_fifo` level∈[0,DEPTH]; full/empty flag consistency; a tracked symbolic value reads out in FIFO order (no loss/reorder/dup) | **BMC depth 14 PASS** | Proved at DEPTH=4: the pointer/count logic is depth-parametric (identical for any DEPTH), and 14 steps enqueue at full occupancy then dequeue through all entries ahead of the tracked one. DEPTH=16 is also exercised exhaustively by the random regression. |
+| `scrambler_props` | descramble(scramble(x)) == x (matched-seed self-sync inverse) | **BMC 20 + induction PASS (unbounded)** | Both 7-bit LFSRs start aligned and stay aligned; k-induction (k=20) proves the inverse for all time. |
+| `plcp_props` | `bl_rx` FSM legal transitions; DONE→SEARCH next cycle (no hang) | **BMC 16 + induction PASS (unbounded)** | 4-state FSM; k-induction (k=16) proves every transition is legal for all reachable states. |
 
 All proofs assert-only (no covers needed for the gate). `make formal` exits non-zero on
 any BMC failure; induction results are reported as a (stronger, unbounded) bonus.

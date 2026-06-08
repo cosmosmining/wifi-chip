@@ -50,4 +50,9 @@ the golden model. Full-chip synth ≈ 2743 generic cells.
 (21/21 bins)** — `docs/COVERAGE.md` (length, data, service, TX-FIFO occupancy, CRC
 ok/fail, SFD, noise, noise×crc). Gate ≥95% PASS. The regression caught + fixed a real
 `bl_tx` FIFO-head race (D-0112). P1 benches (V-DQPSK/V-NOISE/V-CCA) and V-DFT follow in
-Phases 5/6; formal (FIFO/FSM/scrambler) is Phase 4.
+Phases 5/6.
+
+## Phase 4 status — CLOSED
+`make formal` (yosys+smtbmc+z3) ALL PROOFS PASSED: FIFO safety+integrity (BMC d14),
+scrambler inverse (k-induction, unbounded), PLCP FSM legal/no-hang (k-induction, unbounded).
+See `dv/formal/README.md`.

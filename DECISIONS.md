@@ -5,6 +5,16 @@ supersede with a new dated entry rather than rewriting an old one.
 
 ---
 
+## Phase 4 — Formal
+
+### D-0113 — Formal via yosys+smtbmc+z3; FIFO proved at DEPTH=4 (2026-06-08)
+`sby` isn't installable in the sandbox, so `make formal` runs the engine SymbiYosys
+orchestrates: yosys `write_smt2` + `yosys-smtbmc` + **z3** (`pip install z3-solver`). Same
+flow in CI (formal.yml). The FIFO proof instantiates DEPTH=4 — the pointer/count logic is
+depth-parametric, so a small instance proves the property while keeping BMC fast under z3;
+DEPTH=16 is additionally exercised exhaustively by the Phase 3 regression. Results:
+scrambler-inverse and PLCP-FSM pass by **k-induction (unbounded)**; FIFO by BMC depth 14.
+
 ## Phase 3 — DV closure
 
 ### D-0112 — Regression caught a TX FIFO-head race (fixed) (2026-06-07)

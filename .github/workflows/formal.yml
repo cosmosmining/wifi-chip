@@ -1,6 +1,5 @@
 name: formal
-# Runs SymbiYosys safety proofs (Phase 4). Triggered on RTL/formal changes and on
-# demand so doc-only pushes do not pay for the oss-cad-suite install.
+# Phase 4 formal proofs (yosys write_smt2 + yosys-smtbmc + z3) - the SymbiYosys engine.
 on:
   push:
     paths:
@@ -19,7 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install oss-cad-suite (yosys + sby)
-        uses: YosysHQ/setup-oss-cad-suite@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install yosys + z3
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yosys
+          python -m pip install --upgrade pip
+          pip install z3-solver
       - name: make formal
         run: make formal

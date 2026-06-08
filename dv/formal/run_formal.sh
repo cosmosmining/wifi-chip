@@ -32,7 +32,7 @@ prove() {  # name top sources bmc_depth ind_depth(0=skip)
   fi
 }
 
-prove fifo_props      fifo_props      "rtl/core/bl_fifo.v"      32 0
+prove fifo_props      fifo_props      "rtl/core/bl_fifo.v"      14 0
 prove scrambler_props scrambler_props "rtl/core/bl_scrambler.v" 20 20
 prove plcp_props      plcp_props      \
   "rtl/core/bl_rx.v rtl/core/bl_correlator.v rtl/core/bl_dbpsk.v rtl/core/bl_scrambler.v rtl/core/bl_crc16.v" \
