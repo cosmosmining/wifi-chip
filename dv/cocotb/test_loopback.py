@@ -54,8 +54,9 @@ async def _run_one(dut, psdu, signal=bl.SIGNAL_DBPSK_1M):
 @cocotb.test()
 async def loopback_packets(dut):
     cocotb.start_soon(Clock(dut.clk, CLK, unit="ns").start())
-    for length in (1, 4, 9):
-        psdu = bytes(random.Random(length).getrandbits(8) for _ in range(length))
+    rng = random.Random(0x10097)
+    for length in (1, 4, 9, 13):
+        psdu = bytes(rng.getrandbits(8) for _ in range(length))
         got = await _run_one(dut, psdu)
         assert int(dut.sfd.value) == 0  # pulse already passed; just sanity read
         assert int(dut.crc_ok.value) == 1, f"len {length}: RTL CRC not OK"

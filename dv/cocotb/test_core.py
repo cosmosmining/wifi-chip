@@ -55,7 +55,8 @@ async def apb_loopback(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 2)
 
-    psdu = bytes(random.Random(42).getrandbits(8) for _ in range(5))
+    _rng = random.Random(42)
+    psdu = bytes(_rng.getrandbits(8) for _ in range(5))
 
     # enable core + rx + loopback; enable all IRQs
     await apb_write(dut, CTRL, (1 << 0) | (1 << 2) | (1 << 3))

@@ -72,7 +72,8 @@ async def spi_loopback(dut):
 
     assert await spi_read(dut, 0x00) == 0x424C0100, "ID over SPI wrong"
 
-    psdu = bytes(random.Random(123).getrandbits(8) for _ in range(4))
+    _rng = random.Random(123)
+    psdu = bytes(_rng.getrandbits(8) for _ in range(4))
     await spi_write(dut, CTRL, (1 << 0) | (1 << 2) | (1 << 3))     # en|rx_en|loopback
     await spi_write(dut, IRQ_EN, 0x02)                              # only rx_done -> IRQ pin
     await spi_write(dut, TXCFG,
