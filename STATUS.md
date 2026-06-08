@@ -13,6 +13,7 @@
 - **Bug found + fixed:** the regression caught a `bl_tx` FIFO-head race on each PSDU
   byte's MSB (D-0112); directed tests had masked it with all-identical PSDU bytes.
 - Directed suite `make sim` 13/13 (regression excluded; lives in `make regress`).
+- **CI green** on `bbe5c2f`: lint ✓ test ✓ formal ✓.
 
 ## Phase 2 / P0 results (evidence)
 - Full P0 chip integrated and verified: `make sim` **13/13**, `make model` **23/23**,
