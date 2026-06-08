@@ -92,8 +92,10 @@ regress: ## constrained-random regression (SEEDS, default 500) + coverage gate
 cov: ## functional coverage report (docs/COVERAGE.md) + >=95% gate
 	$(PYTHON) scripts/cov_report.py
 
-formal: ## [Phase 4] SymbiYosys safety proofs (FIFO/FSM/scrambler)
-	@echo "[stub] formal: SymbiYosys proofs land in Phase 4 (sby=$${SBY:-not installed})."
+formal: ## formal proofs (yosys+smtbmc+z3): FIFO / scrambler / PLCP FSM
+	@test -n "$(YOSYS)" || { echo "yosys missing"; exit 1; }
+	@command -v z3 >/dev/null || { echo "z3 missing (pip install z3-solver)"; exit 1; }
+	bash dv/formal/run_formal.sh
 
 dft: ## [Phase 6] Fault scan insertion + ATPG
 	@echo "[stub] dft: scan + ATPG (Fault) lands in Phase 6."

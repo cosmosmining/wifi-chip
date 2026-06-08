@@ -21,6 +21,9 @@ module bl_rx (
     output reg         byte_valid,
     output reg  [7:0]  byte_data,
     output reg         done            // 1-cycle pulse at end of PSDU
+`ifdef FORMAL
+    , output wire [1:0] f_state        // formal-only FSM state observation
+`endif
 );
   localparam [15:0] SFD = 16'hF3A0;
   localparam [1:0]  S_SEARCH=2'd0, S_HDR=2'd1, S_PSDU=2'd2, S_DONE=2'd3;
@@ -55,6 +58,10 @@ module bl_rx (
 
   wire [15:0] newwin = {win, lb};
   wire [47:0] newhdr = {hdrsh, lb};
+
+`ifdef FORMAL
+  assign f_state = state;
+`endif
 
   always @(posedge clk) begin
     if (!rst_n) begin
