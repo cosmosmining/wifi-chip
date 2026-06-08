@@ -5,6 +5,23 @@ supersede with a new dated entry rather than rewriting an old one.
 
 ---
 
+## Phase 3 — DV closure
+
+### D-0112 — Regression caught a TX FIFO-head race (fixed) (2026-06-07)
+The constrained-random regression found a real RTL bug: `bl_tx` read the next PSDU byte's
+MSB directly from the FIFO head one cycle before `psdu_pop` advanced it, so each byte k>0
+took its first bit from byte k-1 (visible only when consecutive MSBs differ). The directed
+loopback/core/top tests had masked it by accidentally generating all-identical PSDU bytes
+(`random.Random(seed).getrandbits(8)` *per byte* re-seeds each call). Fixes: bl_tx now
+latches each byte into `tx_byte` at the byte boundary (head settled); benches use one RNG
+per packet. This is exactly why constrained-random + the model-as-law matter.
+
+### D-0111 — Regression shortens SYNC_LEN for sim throughput (2026-06-07)
+`bl_tx` has a `SYNC_LEN` parameter (default 128 = taped-out). The regression builds it at
+SYNC_LEN=24 (model `sync_len` matched) purely for simulation speed; preamble length does
+not change the scramble/spread/correlate/demod/framing logic under test. The full 128-bit
+preamble is exercised by the directed `test_top`/`test_core`/`test_loopback` benches.
+
 ### D-0001 — BarkerLink lives at the root of the `wifi-chip` repo (2026-06-07)
 The master spec describes a `barkerlink/` project root. The session is scoped to the
 empty `cosmosmining/wifi-chip` repo (802.11b == WiFi), so the repo root **is** the

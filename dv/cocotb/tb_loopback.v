@@ -1,7 +1,9 @@
 `default_nettype none
 // DV-only wrapper: TX FIFO -> bl_tx -> (loopback chips) -> bl_rx, for the end-to-end
 // datapath gate. The product loopback path (CTRL.LOOPBACK mux) lives in barkerlink_core.
-module tb_loopback (
+module tb_loopback #(
+    parameter [7:0] SYNC_LEN = 8'd128
+) (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        start,
@@ -31,7 +33,7 @@ module tb_loopback (
       .wr_en(tx_wr), .wr_data(tx_wr_data),
       .rd_en(tx_pop), .rd_data(fifo_head), .full(tx_full));
 
-  bl_tx u_tx (
+  bl_tx #(.SYNC_LEN(SYNC_LEN)) u_tx (
       .clk(clk), .rst_n(rst_n), .start(start),
       .signal(signal), .service(service), .length(length),
       .psdu_data(fifo_head), .psdu_pop(tx_pop),

@@ -83,11 +83,14 @@ synth: ## generic Yosys elaborate + cell-count (synthesizability check)
 	echo ">> generic cell estimate (sky130 mapping happens in Phase 7):"
 	grep -E "Number of cells" $(BUILD)/synth.log | tail -1 || true
 
-regress: ## [Phase 3] constrained-random regression (>=500 seeds)
-	@echo "[stub] regress: constrained-random + functional coverage closure lands in Phase 3."
+regress: ## constrained-random regression (SEEDS, default 500) + coverage gate
+	@test -n "$(IVERILOG)" || { echo "iverilog missing - cannot sim"; exit 1; }
+	mkdir -p $(BUILD)/cov && rm -f $(BUILD)/cov/coverage.json
+	$(PYTEST) -q dv/cocotb/test_regress.py
+	$(MAKE) --no-print-directory cov
 
-cov: ## [Phase 3] merge + report functional/code coverage
-	@echo "[stub] cov: coverage collection/report lands in Phase 3."
+cov: ## functional coverage report (docs/COVERAGE.md) + >=95% gate
+	$(PYTHON) scripts/cov_report.py
 
 formal: ## [Phase 4] SymbiYosys safety proofs (FIFO/FSM/scrambler)
 	@echo "[stub] formal: SymbiYosys proofs land in Phase 4 (sby=$${SBY:-not installed})."
