@@ -57,9 +57,9 @@ smoke: lint ## lint + hello-world cocotb/Icarus sim (Phase 0 gate)
 	$(PYTEST) -q dv/cocotb/test_smoke.py
 	echo "SMOKE PASS"
 
-sim: ## run the full cocotb bench suite
+sim: ## run the directed cocotb bench suite (excludes the long regression)
 	@test -n "$(IVERILOG)" || { echo "iverilog missing - cannot sim"; exit 1; }
-	$(PYTEST) -q dv/cocotb
+	$(PYTEST) -q dv/cocotb --ignore=dv/cocotb/test_regress.py
 
 model: ## run the Python golden-model unit tests
 	$(PYTEST) -q model

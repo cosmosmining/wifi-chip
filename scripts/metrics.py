@@ -58,6 +58,15 @@ def _lint_status() -> str:
     return "FAIL" if re.search(r"%(Warning|Error)", txt) else "clean"
 
 
+def _func_cov() -> str:
+    cov = ROOT / "docs" / "COVERAGE.md"
+    if cov.exists():
+        m = re.search(r"Coverage:\s*([\d.]+)%", cov.read_text())
+        if m:
+            return m.group(1) + "%"
+    return "n/a"
+
+
 def _cell_count() -> str:
     log = BUILD / "synth.log"
     if not log.exists():
@@ -78,7 +87,7 @@ def main() -> int:
         "phase": args.phase or _phase_from_status(),
         "lint": _lint_status(),
         "cells_generic": _cell_count(),
-        "func_cov": "n/a",
+        "func_cov": _func_cov(),
         "wns_ns": "n/a",
         "atpg_pct": "n/a",
         "note": args.note or "-",
