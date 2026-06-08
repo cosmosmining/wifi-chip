@@ -185,6 +185,27 @@ def inject_chip_flips(chips: list[int], p: float, rng: random.Random) -> list[in
     return [c ^ (1 if rng.random() < p else 0) for c in chips]
 
 
+NOISE_SEED = 0xACE1
+
+
+class LfsrNoise:
+    """Bit-accurate model of the on-chip bl_noise injector (16-bit Fibonacci LFSR,
+    poly x^16+x^14+x^13+x^11+1). Flip uses the current word, then the LFSR advances."""
+
+    def __init__(self, seed: int = NOISE_SEED):
+        self.lfsr = seed & 0xFFFF
+
+    def flip(self, prob: int) -> int:
+        f = 1 if self.lfsr < prob else 0
+        fb = ((self.lfsr >> 15) ^ (self.lfsr >> 13)
+              ^ (self.lfsr >> 12) ^ (self.lfsr >> 10)) & 1
+        self.lfsr = ((self.lfsr << 1) | fb) & 0xFFFF
+        return f
+
+    def apply(self, chips: list[int], prob: int) -> list[int]:
+        return [c ^ self.flip(prob) for c in chips]
+
+
 # --------------------------------------------------------------------------- #
 # CRC-16-CCITT over a bit list (MSB-first), init 0xFFFF, final complement.
 # --------------------------------------------------------------------------- #

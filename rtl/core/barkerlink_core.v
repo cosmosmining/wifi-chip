@@ -69,15 +69,36 @@ module barkerlink_core (
   wire rx_c  = ctrl_loopback ? tx_c  : rx_chip_ext;
   wire rx_cv = (ctrl_loopback ? tx_cv : rx_chip_valid_ext) & ctrl_rx_en;
 
+  // --- P1 noise injector (CSR-controlled chip-flip for on-chip BER) ---
+  wire rx_cn, rx_cvn;
+  bl_noise u_noise (
+      .clk(clk), .rst_n(rst_n), .en(ctrl_noise_en), .prob(noise_prob),
+      .in_valid(rx_cv), .in_chip(rx_c), .out_valid(rx_cvn), .out_chip(rx_cn));
+
   // --- RX datapath ---
   wire        rx_sfd, rx_crc_ok, rx_crc_err, rx_byte_valid, rx_done;
   wire [7:0]  rx_byte_data, rx_sig, rx_svc;
   wire [15:0] rx_len;
+  wire       rx_corr_v;
+  wire [7:0] rx_corr_mag;
   bl_rx u_rx (
-      .clk(clk), .rst_n(rst_n), .in_valid(rx_cv), .in_chip(rx_c),
+      .clk(clk), .rst_n(rst_n), .in_valid(rx_cvn), .in_chip(rx_cn),
       .sfd(rx_sfd), .crc_ok(rx_crc_ok), .crc_err(rx_crc_err),
       .rx_signal(rx_sig), .rx_service(rx_svc), .rx_length(rx_len),
-      .byte_valid(rx_byte_valid), .byte_data(rx_byte_data), .done(rx_done));
+      .byte_valid(rx_byte_valid), .byte_data(rx_byte_data), .done(rx_done),
+      .corr_valid(rx_corr_v), .corr_mag(rx_corr_mag));
+
+  // --- CCA / RSSI from correlation magnitude (P1) ---
+  reg [7:0] rssi_r;
+  reg       cca_r;
+  always @(posedge clk) begin
+    if (!rst_n) begin
+      rssi_r <= 8'd0; cca_r <= 1'b0;
+    end else if (rx_corr_v) begin
+      rssi_r <= rx_corr_mag;
+      cca_r  <= (rx_corr_mag >= cca_thresh);
+    end
+  end
 
   bl_fifo #(.WIDTH(8), .DEPTH(16)) u_rxfifo (
       .clk(clk), .rst_n(rst_n), .clear(soft_rst),
@@ -94,7 +115,7 @@ module barkerlink_core (
   end
   assign sfd_det = sfd_seen;
   assign crc_ok  = rx_crc_ok;
-  assign cca     = 1'b0;   // P1
+  assign cca     = cca_r;
 
   // --- IRQ event vector: [0]tx_done [1]rx_done [2]sfd [3]crc_err [4]rx_fifo [5]cca ---
   wire [5:0] irq_set = {1'b0, rx_byte_valid, rx_crc_err, rx_sfd, rx_done, tx_done};
@@ -111,14 +132,14 @@ module barkerlink_core (
       .scan_en(scan_en), .test_mode(test_mode),
       .tx_fifo_wr(tx_fifo_wr), .tx_fifo_wdata(tx_fifo_wdata), .rx_fifo_rd(rx_fifo_rd),
       .st_tx_busy(tx_busy), .st_rx_busy(ctrl_rx_en), .st_sfd_det(sfd_seen),
-      .st_crc_ok(rx_crc_ok), .st_cca(1'b0),
+      .st_crc_ok(rx_crc_ok), .st_cca(cca_r),
       .st_tx_full(tx_full), .st_tx_empty(tx_empty),
       .st_rx_full(rx_full), .st_rx_empty(rx_empty),
       .tx_level(tx_level), .rx_level(rx_level), .rx_fifo_rdata(rx_head),
       .rx_signal(rx_sig), .rx_service(rx_svc), .rx_length(rx_len),
-      .rssi(8'd0), .irq_set(irq_set));
+      .rssi(rssi_r), .irq_set(irq_set));
 
-  // P1 nets intentionally unused in P0
-  wire _unused = &{1'b0, ctrl_mode, ctrl_noise_en, noise_prob, cca_thresh};
+  // ctrl_mode (DQPSK select) is documented-but-untaped in P0/P1 (area fallback, D-0114)
+  wire _unused = &{1'b0, ctrl_mode};
 endmodule
 `default_nettype wire

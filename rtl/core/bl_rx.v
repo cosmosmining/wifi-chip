@@ -20,6 +20,8 @@ module bl_rx (
     output reg  [15:0] rx_length,
     output reg         byte_valid,
     output reg  [7:0]  byte_data,
+    output wire        corr_valid,     // 1 per symbol: correlation magnitude valid
+    output wire [7:0]  corr_mag,       // |correlation peak| for CCA / RSSI (P1)
     output reg         done            // 1-cycle pulse at end of PSDU
 `ifdef FORMAL
     , output wire [1:0] f_state        // formal-only FSM state observation
@@ -33,7 +35,8 @@ module bl_rx (
   wire signed [7:0] co_corr;     // correlation peak (CCA/RSSI in P1)
   bl_correlator u_corr (.clk(clk), .rst_n(rst_n), .in_valid(in_valid),
       .in_chip(in_chip), .out_valid(co_v), .out_sym(co_sym), .out_corr(co_corr));
-  wire _unused_corr = &{1'b0, co_corr};
+  assign corr_valid = co_v;
+  assign corr_mag   = co_corr[7] ? (~co_corr + 8'd1) : co_corr;   // |correlation|
   bl_dbpsk #(.DECODE(1'b1)) u_dec (.clk(clk), .rst_n(rst_n), .clear(1'b0),
       .in_valid(co_v), .in_bit(co_sym), .out_valid(db_v), .out_bit(db_b));
   bl_scrambler #(.DESCRAMBLE(1'b1)) u_descr (.clk(clk), .rst_n(rst_n), .clear(1'b0),
