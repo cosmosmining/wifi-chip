@@ -45,6 +45,9 @@ Model **23/23** (`make model`); RTL benches **13/13** (`make sim`):
 (V-CSR), `test_loopback` + `test_core` + `test_top` (V-LOOP / V-RX-DEMOD / V-PLCP-SFD):
 PSDU recovered end-to-end (datapath, APB, and pin-level SPI) with CRC OK, cross-checked vs
 the golden model. Full-chip synth ≈ 2743 generic cells.
-**Next (Phase 3):** constrained-random ≥500 seeds, functional coverage ≥95% (length × data
-× FIFO occupancy × SFD-false-detect crosses), regression report committed. P1 benches
-(V-DQPSK/V-NOISE/V-CCA) and V-DFT follow in Phases 5/6.
+## Phase 3 status — CLOSED
+`make regress` SEEDS=500 (+60 noisy-RX): **0 failures**; **functional coverage 100%
+(21/21 bins)** — `docs/COVERAGE.md` (length, data, service, TX-FIFO occupancy, CRC
+ok/fail, SFD, noise, noise×crc). Gate ≥95% PASS. The regression caught + fixed a real
+`bl_tx` FIFO-head race (D-0112). P1 benches (V-DQPSK/V-NOISE/V-CCA) and V-DFT follow in
+Phases 5/6; formal (FIFO/FSM/scrambler) is Phase 4.

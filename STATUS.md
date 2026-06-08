@@ -1,8 +1,18 @@
 # STATUS
 
-**Phase:** 2 — P0 RTL + lockstep. **P0 COMPLETE** (full chip integrated); ready for Phase 3.
+**Phase:** 3 — DV closure. **COMPLETE** (regression 0 fail, 100% functional coverage).
 **Branch:** `claude/upbeat-hypatia-eqKXz`
-**Last updated:** 2026-06-07
+**Last updated:** 2026-06-08
+
+## Phase 3 results (evidence)
+- **Regression:** `make regress` SEEDS=500 (+60 noisy-RX) → **0 failures** (8m34s). Clean
+  full-chip loopback (random length 1–24, data, service) exact recovery + RTL==model;
+  noisy-RX lockstep vs model across clean/low/high chip-flip noise.
+- **Functional coverage: 100.0% (21/21 bins)** — `docs/COVERAGE.md` (length, data,
+  service, TX-FIFO occupancy, CRC ok/fail, SFD, noise, noise×crc cross). Gate ≥95% PASS.
+- **Bug found + fixed:** the regression caught a `bl_tx` FIFO-head race on each PSDU
+  byte's MSB (D-0112); directed tests had masked it with all-identical PSDU bytes.
+- Directed suite `make sim` 13/13 (regression excluded; lives in `make regress`).
 
 ## Phase 2 / P0 results (evidence)
 - Full P0 chip integrated and verified: `make sim` **13/13**, `make model` **23/23**,
@@ -41,9 +51,9 @@
 - Make targets: `model`, `ber`, `regs`. DECISIONS D-0101..D-0106.
 
 ## Open gate
-**P0 complete** — full chip (SPI→APB3 CSR + FIFOs + DSSS TX/RX + loopback + IRQ) passes
-pin-level SPI loopback; lint clean; 2743 cells. **Next: Phase 3** — constrained-random
-≥500 seeds, functional coverage ≥95%, regression report committed.
+**Phase 3 gate MET** — regression 0 failures over 500+ seeds, functional coverage 100%
+(≥95% gate), `docs/COVERAGE.md` committed. **Next: Phase 4** — formal (SymbiYosys): FIFO
+safety, PLCP FSM deadlock-freedom/legal transitions, scrambler/descrambler inverse.
 
 ## Phase 2 plan (module-by-module: RTL → cocotb lockstep vs golden model → lint → commit)
 scrambler → DBPSK enc/dec → Barker spreader/oversample → soft correlator + genie decision
