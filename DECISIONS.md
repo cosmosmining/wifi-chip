@@ -5,6 +5,18 @@ supersede with a new dated entry rather than rewriting an old one.
 
 ---
 
+## Phase 5 — P1 features
+
+### D-0114 — DQPSK and early-late timing: documented-but-untaped (2026-06-08)
+Per the SPEC area-fallback ladder, under the shuttle schedule the P1 must-keeps are the
+**noise injector, CCA/RSSI, and scan** — all implemented/verified (bl_noise + CCA/RSSI
+lockstep; scan in Phase 6). **DQPSK 2 Mbps** and **early-late chip-timing recovery** are
+*documented-but-untaped*: the golden model carries the DQPSK Gray dibit↔phase mapping
+(unit-tested) and the RX uses genie/fixed chip timing (loopback-aligned). The CSR
+`CTRL.MODE` bit and `SIGNAL=0x14` are reserved; the DQPSK datapath and early-late loop are
+specified for a future revision, not in the v1.0 tapeout. This is the spec-sanctioned
+fallback, taken deliberately to protect schedule + the must-keep characterization features.
+
 ## Phase 4 — Formal
 
 ### D-0113 — Formal via yosys+smtbmc+z3; FIFO proved at DEPTH=4 (2026-06-08)

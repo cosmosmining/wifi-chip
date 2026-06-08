@@ -56,3 +56,9 @@ Phases 5/6.
 `make formal` (yosys+smtbmc+z3) ALL PROOFS PASSED: FIFO safety+integrity (BMC d14),
 scrambler inverse (k-induction, unbounded), PLCP FSM legal/no-hang (k-induction, unbounded).
 See `dv/formal/README.md`.
+
+## Phase 5 status — CLOSED (P1 must-keeps)
+V-NOISE + V-CCA: `test_noise` — RX bit-accurate to `model.LfsrNoise` under on-chip noise
+(prob 0/0x600/0x1800), CCA asserts + RSSI nonzero on present signal. `make sim` 14/14.
+V-DQPSK (datapath) and early-late timing are documented-but-untaped (D-0114); DQPSK symbol
+mapping remains model-tested. V-DFT (ATPG) → Phase 6/CI (Fault not installable).

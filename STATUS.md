@@ -1,8 +1,23 @@
 # STATUS
 
-**Phase:** 4 — Formal. **COMPLETE** (FIFO / scrambler / PLCP FSM proofs pass).
+**Phase:** 5–8 — **release candidate v1.0.0-rc1**. P0+P1 functional complete; DV + formal
+closed; PREDICTIONS frozen; firmware ready. GDS signoff + ATPG run in CI (tool-deferred).
 **Branch:** `claude/upbeat-hypatia-eqKXz`
 **Last updated:** 2026-06-08
+
+## Phase 5–8 results (evidence)
+- **Phase 5 (P1):** `bl_noise` LFSR chip-flip injector + CCA/RSSI implemented and
+  **lockstep-verified** (`test_noise`: RX bit-accurate to `model.LfsrNoise` under on-chip
+  noise; CCA/RSSI observed). DQPSK + early-late timing **documented-but-untaped** per the
+  area-fallback ladder (D-0114). `make sim` 14/14.
+- **Phase 6 (DFT):** scan infra specified (`TEST.SCAN_EN`, scan on `uio`); flop-based,
+  macro-free → scan-friendly. ATPG via Fault **deferred to CI** (not installable; D-0002),
+  target ≥95% stuck-at (`dft/README.md`).
+- **Phase 7 (harden/predict):** **PREDICTIONS.md frozen** (area/timing/BER/SFD/GDS).
+  OpenSTA/OpenROAD/LibreLane + TT GDS signoff run in CI (`gds.yml`, TT action) — github
+  releases blocked locally (D-0002).
+- **Phase 8 (release):** RP2040 MicroPython bring-up + BER-sweep firmware (`fw/`); SPEC.md
+  is datasheet-grade; tag **v1.0.0-rc1**.
 
 ## Phase 4 results (evidence)
 - `make formal` (yosys+smtbmc+z3; sby not installable, D-0113) → **ALL PROOFS PASSED**:
@@ -60,10 +75,11 @@
 - Make targets: `model`, `ber`, `regs`. DECISIONS D-0101..D-0106.
 
 ## Open gate
-**Phase 4 gate MET** — FIFO/scrambler/PLCP formal proofs pass; bounded depths justified.
-**Next: Phase 5** — P1 features (LFSR noise injector, CCA/RSSI, DQPSK, early-late timing),
-re-run DV closure. Per the area-fallback ladder, noise injector/CCA/scan are must-keep;
-DQPSK and early-late timing may be documented-but-untaped if area/schedule constrained.
+**Release candidate v1.0.0-rc1.** Done locally: P0+P1 functional (noise/CCA/RSSI), DV
+closure (regress 0-fail, cov 100%), formal (FIFO/scrambler/PLCP). **Remaining to v1.0.0
+(operator + CI):** run the TT GDS Action (`gds.yml`) for green sky130 signoff, run Fault
+ATPG for the stuck-at number, then submit to the TTSKY26c shuttle. DQPSK/early-late are a
+documented future revision (D-0114).
 
 ## Phase 2 plan (module-by-module: RTL → cocotb lockstep vs golden model → lint → commit)
 scrambler → DBPSK enc/dec → Barker spreader/oversample → soft correlator + genie decision
