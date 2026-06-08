@@ -210,14 +210,15 @@ class PpduMeta:
 
 
 def build_ppdu_bits(psdu: bytes, signal: int = SIGNAL_DBPSK_1M,
-                    service: int = SERVICE_DEFAULT) -> tuple[list[int], PpduMeta]:
+                    service: int = SERVICE_DEFAULT,
+                    sync_len: int = SYNC_LEN) -> tuple[list[int], PpduMeta]:
     """Logical (pre-scramble) PPDU bit stream: SYNC | SFD | header | PSDU."""
     length = len(psdu)
     header_wo_crc = (int_to_bits(signal, 8) + int_to_bits(service, 8)
                      + int_to_bits(length, 16))
     crc = crc16(header_wo_crc)
     header = header_wo_crc + int_to_bits(crc, 16)
-    bits = [1] * SYNC_LEN + int_to_bits(SFD, 16) + header + bytes_to_bits(psdu)
+    bits = [1] * sync_len + int_to_bits(SFD, 16) + header + bytes_to_bits(psdu)
     return bits, PpduMeta(signal, service, length, crc)
 
 
@@ -264,9 +265,10 @@ def _find_pattern(bits: list[int], pattern: list[int]) -> int:
 # Full DBPSK TX / RX and internal loopback
 # --------------------------------------------------------------------------- #
 def tx_dbpsk(psdu: bytes, signal: int = SIGNAL_DBPSK_1M,
-             service: int = SERVICE_DEFAULT) -> tuple[list[int], PpduMeta]:
+             service: int = SERVICE_DEFAULT,
+             sync_len: int = SYNC_LEN) -> tuple[list[int], PpduMeta]:
     """PSDU -> 1-bit chip stream (4x oversampled). Returns (stream, meta)."""
-    logical, meta = build_ppdu_bits(psdu, signal, service)
+    logical, meta = build_ppdu_bits(psdu, signal, service, sync_len)
     scrambled = Scrambler().scramble(logical)
     symbits = dbpsk_encode(scrambled)
     return oversample(spread_chiprate(symbits)), meta
@@ -282,8 +284,9 @@ def rx_dbpsk(stream: list[int]) -> RxResult:
 
 
 def loopback_dbpsk(psdu: bytes, p_chip: float = 0.0, seed: int = 0,
-                   signal: int = SIGNAL_DBPSK_1M) -> RxResult:
-    stream, _ = tx_dbpsk(psdu, signal=signal)
+                   signal: int = SIGNAL_DBPSK_1M,
+                   sync_len: int = SYNC_LEN) -> RxResult:
+    stream, _ = tx_dbpsk(psdu, signal=signal, sync_len=sync_len)
     if p_chip > 0.0:
         stream = inject_chip_flips(stream, p_chip, random.Random(seed))
     return rx_dbpsk(stream)

@@ -10,7 +10,9 @@
 // inline over SIGNAL|SERVICE|LENGTH. PSDU bytes are pulled from a FIFO (psdu_data = head,
 // psdu_pop advances to the next byte). Bit order/seed per SPEC sec 6/7/9.
 //============================================================================
-module bl_tx (
+module bl_tx #(
+    parameter [7:0] SYNC_LEN = 8'd128   // preamble ones; taped-out value 128
+) (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        start,          // pulse to begin a frame
@@ -32,6 +34,7 @@ module bl_tx (
   reg  [7:0]  cnt;         // bit index within SYNC/SFD/HDR/CRC
   reg  [2:0]  bit_in_byte;
   reg  [15:0] pbyte;       // PSDU byte index
+  reg  [7:0]  tx_byte;     // latched current PSDU byte (avoids FIFO-head race)
   reg         inj_busy, saw_busy;
 
   // --- pipeline submodule wires ---
@@ -48,7 +51,7 @@ module bl_tx (
       F_SFD:  lbit = SFD[15 - cnt[3:0]];
       F_HDR:  lbit = hdr_word[31 - cnt[4:0]];
       F_CRC:  lbit = crc_val[15 - cnt[3:0]];
-      F_PSDU: lbit = psdu_data[7 - bit_in_byte];
+      F_PSDU: lbit = tx_byte[7 - bit_in_byte];
       default: lbit = 1'b0;
     endcase
   end
@@ -57,7 +60,7 @@ module bl_tx (
 
   always @(posedge clk) begin
     if (!rst_n) begin
-      field<=F_IDLE; cnt<=8'd0; bit_in_byte<=3'd0; pbyte<=16'd0;
+      field<=F_IDLE; cnt<=8'd0; bit_in_byte<=3'd0; pbyte<=16'd0; tx_byte<=8'd0;
       inj_busy<=1'b0; saw_busy<=1'b0; busy<=1'b0; done<=1'b0; psdu_pop<=1'b0;
       sc_iv<=1'b0; sc_ib<=1'b0; crc_iv<=1'b0;
     end else begin
@@ -81,20 +84,29 @@ module bl_tx (
             if (bit_done) begin
               inj_busy<=1'b0;
               case (field)
-                F_SYNC: if (cnt==8'd127) begin field<=F_SFD; cnt<=8'd0; end
+                F_SYNC: if (cnt==SYNC_LEN-8'd1) begin field<=F_SFD; cnt<=8'd0; end
                         else cnt<=cnt+8'd1;
                 F_SFD:  if (cnt==8'd15)  begin field<=F_HDR; cnt<=8'd0; end
                         else cnt<=cnt+8'd1;
                 F_HDR:  if (cnt==8'd31)  begin field<=F_CRC; cnt<=8'd0; end
                         else cnt<=cnt+8'd1;
                 F_CRC:  if (cnt==8'd15) begin
-                          if (length==16'd0) field<=F_DONE;
-                          else begin field<=F_PSDU; bit_in_byte<=3'd0; pbyte<=16'd0; end
+                          if (length==16'd0) begin
+                            field<=F_DONE;
+                          end else begin
+                            // latch byte 0 and advance FIFO head for byte 1
+                            field<=F_PSDU; bit_in_byte<=3'd0; pbyte<=16'd0;
+                            tx_byte<=psdu_data; psdu_pop<=1'b1;
+                          end
                         end else cnt<=cnt+8'd1;
                 F_PSDU: if (bit_in_byte==3'd7) begin
-                          bit_in_byte<=3'd0; psdu_pop<=1'b1;
-                          if (pbyte==length-16'd1) field<=F_DONE;
-                          else pbyte<=pbyte+16'd1;
+                          if (pbyte==length-16'd1) begin
+                            field<=F_DONE;
+                          end else begin
+                            // latch next byte (head settled) and advance FIFO
+                            bit_in_byte<=3'd0; pbyte<=pbyte+16'd1;
+                            tx_byte<=psdu_data; psdu_pop<=1'b1;
+                          end
                         end else bit_in_byte<=bit_in_byte+3'd1;
                 default: ;
               endcase
